@@ -3,8 +3,9 @@
 namespace Askedio\LaravelRatchet;
 
 use Ratchet\ConnectionInterface;
-use Ratchet\MessageComponentInterface;
+use Ratchet\WebSocket\MessageComponentInterface;
 use GrahamCampbell\Throttle\Facades\Throttle;
+use Ratchet\RFC6455\Messaging\MessageInterface;
 
 abstract class RatchetWsServer implements MessageComponentInterface
 {
@@ -142,9 +143,17 @@ abstract class RatchetWsServer implements MessageComponentInterface
      *
      * @return [type] [description]
      */
-    public function onMessage(ConnectionInterface $conn, $input)
+    public function onMessage(ConnectionInterface $conn, MessageInterface $input)
     {
-        $this->console->comment(sprintf('Message from %d: %s', $conn->resourceId, $input));
+        if($input->isBinary())
+        {
+            $this->console->comment(sprintf('Binary message from %d', $conn->resourceId));    
+        }
+        else
+        {
+            $this->console->comment(sprintf('Message from %d: %s', $conn->resourceId, $input->__toString()));    
+        }
+        
 
         if ($this->isThrottled($conn, 'onMessage')) {
             $this->console->info(sprintf('Message throttled: %d', $conn->resourceId));

@@ -238,7 +238,7 @@ class RatchetServerCommand extends Command
             throw new \Exception("{$this->class} must be an instance of ".RatchetWsServer::class." to create a WebSocket server");
         }
 
-        $this->bootWithBlacklist();
+        //$this->bootWithBlacklist();
 
         return $this->bootWebSocketServer();
     }
