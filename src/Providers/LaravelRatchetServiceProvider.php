@@ -5,6 +5,7 @@ namespace Askedio\LaravelRatchet\Providers;
 use Illuminate\Support\ServiceProvider;
 use GrahamCampbell\Throttle\ThrottleServiceProvider;
 use Askedio\LaravelRatchet\Console\Commands\RatchetServerCommand;
+use Askedio\LaravelRatchet\RatchetRouteHandler;
 
 class LaravelRatchetServiceProvider extends ServiceProvider
 {
@@ -20,6 +21,11 @@ class LaravelRatchetServiceProvider extends ServiceProvider
         $this->app->singleton('command.ratchet.serve', function () {
             return new RatchetServerCommand();
         });
+
+        $this->app->singleton('ratchet.router', function () {
+            return new RatchetRouteHandler();
+        });
+
 
         $this->commands('command.ratchet.serve');
 

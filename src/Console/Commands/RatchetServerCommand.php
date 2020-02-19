@@ -17,6 +17,11 @@ use React\EventLoop\Factory as EventLoop;
 use Askedio\LaravelRatchet\RatchetWsServer;
 use Askedio\LaravelRatchet\RatchetWampServer;
 use Symfony\Component\Console\Input\InputOption;
+use Ratchet\Http\Router;
+use Symfony\Component\Routing\Matcher\UrlMatcher;
+use Symfony\Component\Routing\RequestContext;
+use Askedio\LaravelRatchet\Facades\WebsocketsRoute;
+
 
 class RatchetServerCommand extends Command
 {
@@ -53,6 +58,14 @@ class RatchetServerCommand extends Command
      * @var string
      */
     protected $class;
+
+
+    /**
+     * Whether to use routes instead of a single class
+     *
+     * @var string
+     */
+    protected $use_routes;
 
     /**
      * The type of server to boot.
@@ -132,6 +145,9 @@ class RatchetServerCommand extends Command
         $this->keepAlive = $this->option('keepAlive');
 
         $this->tls = config('ratchet.tls', []);
+
+        $this->use_routes = config('ratchet.use_routes', false);
+
         $peer_name = env('APP_URL');
         $pos = strpos($peer_name, '://');
         if ($pos !== false) {
@@ -167,9 +183,22 @@ class RatchetServerCommand extends Command
      */
     private function createServerInstance()
     {
-        if (! $this->serverInstance instanceof $this->class) {
-            $class = $this->class;
-            $this->serverInstance = $this->ratchetServer = new $class($this);
+        if($this->use_routes == false)
+        {
+            if (! $this->serverInstance instanceof $this->class) {
+                $class = $this->class;
+                $this->serverInstance = $this->ratchetServer = new $class($this);
+            }
+        }
+        else
+        {
+            if (! $this->serverInstance instanceof Router)
+            {
+                $routes = WebSocketsRoute::getRoutes();
+                $urlMatcher = new UrlMatcher($routes, new RequestContext);
+                $router = new Router($urlMatcher);
+                $this->serverInstance = $this->ratchetServer = $router;
+            }
         }
     }
 
@@ -197,14 +226,29 @@ class RatchetServerCommand extends Command
             $this->bootZmqConnection();
         }
 
-        $this->wsServerInstance = new WsServer($this->serverInstance);
+        if($this->use_routes == false)
+        {
+            $this->wsServerInstance = new WsServer($this->serverInstance);
 
-        $this->serverInstance = new HttpServer(
-            $this->wsServerInstance
-        );
+            $this->serverInstance = new HttpServer(
+                $this->wsServerInstance
+            );
 
-        if($this->keepAlive > 0){
-            $this->wsServerInstance->enableKeepAlive($this->getEventLoop(), $this->keepAlive);
+            if($this->keepAlive > 0) {
+                $this->wsServerInstance->enableKeepAlive($this->getEventLoop(), $this->keepAlive);
+            }
+        }
+        else
+        {
+            $this->serverInstance = new HttpServer($this->serverInstance);
+
+            if($this->keepAlive > 0) {
+                $routes = WebsocketsRoute::getRoutes()->getIterator();
+                foreach($routes as $route)
+                {
+                    $route->getDefaults()['_controller']->enableKeepAlive($this->getEventLoop(), $this->keepAlive);
+                }
+            }
         }
 
         return $this->bootIoServer();
@@ -234,10 +278,12 @@ class RatchetServerCommand extends Command
      */
     private function startWsServer()
     {
-        if (! $this->serverInstance instanceof RatchetWsServer) {
-            throw new \Exception("{$this->class} must be an instance of ".RatchetWsServer::class." to create a WebSocket server");
+        if($this->use_routes == false)
+        {
+            if (! $this->serverInstance instanceof RatchetWsServer) {
+                throw new \Exception("{$this->class} must be an instance of ".RatchetWsServer::class." to create a WebSocket server");
+            }
         }
-
         //$this->bootWithBlacklist();
 
         return $this->bootWebSocketServer();
@@ -283,15 +329,35 @@ class RatchetServerCommand extends Command
 
         $context = new ZMQContext($this->getEventLoop());
         $socket = $context->getSocket(config('ratchet.zmq.method', \ZMQ::SOCKET_PULL));
-        $socket->bind(sprintf('tcp://%s:%d', config('ratchet.zmq.host', '127.0.0.1'), config('ratchet.zmq.port', 5555)));
+        $socket->bind(sprintf('tcp://%s:%d', config('ratchet.zmq.host', '127.0.0.1'), config('ratchet.zmq.port', 5555)));        
 
-        $socket->on('messages', function ($messages) {
-            $this->ratchetServer->onEntry($messages);
-        });
+        if($this->use_routes == false)
+        {
+            $socket->on('messages', function ($messages) {
+                $this->ratchetServer->onEntry($messages);
+            });
 
-        $socket->on('message', function ($message) {
-            $this->ratchetServer->onEntry($message);
-        });
+            $socket->on('message', function ($message) {
+                $this->ratchetServer->onEntry($message);
+            });
+        }
+        else
+        {
+            $routes = WebsocketsRoute::getRoutes()->getIterator();
+            foreach($routes as $route)
+            {
+                $socket->on('message', function($message) use($route) 
+                {
+                    $route->getDefaults()['_controller']->onEntry($message);
+                });
+
+                $socket->on('messages', function ($messages) use($route) 
+                {
+                    $route->getDefaults()['_controller']->onEntry($messages);
+                });
+            }
+
+        }
     }
 
     /**
