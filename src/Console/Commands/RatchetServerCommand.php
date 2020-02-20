@@ -246,7 +246,10 @@ class RatchetServerCommand extends Command
                 $routes = WebsocketsRoute::getRoutes()->getIterator();
                 foreach($routes as $route)
                 {
-                    $route->getDefaults()['_controller']->enableKeepAlive($this->getEventLoop(), $this->keepAlive);
+                    $controller = $route->getDefaults()['_controller'];
+                    $controller->boot();
+                    $controller->enableKeepAlive($this->getEventLoop(), $this->keepAlive);
+                    $controller->setConsole($this);
                 }
             }
         }
@@ -356,7 +359,6 @@ class RatchetServerCommand extends Command
                     $route->getDefaults()['_controller']->onEntry($messages);
                 });
             }
-
         }
     }
 

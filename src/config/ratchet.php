@@ -15,7 +15,7 @@ return [
 
     // use_routes: if set to true, this bypasses the above class and uses routes instead. example route:
     // WebSocketsRoute::webSocket('/test', App\TestWebSocketHandler::class);
-    // the routed classes need to implement Ratchet\WebSocket\MessageComponentInterface (not compatible with extends RatchetWsServer at time of writing)
+    // the routed classes need to implement Askedio\LaravelRatchet\Interfaces\RatchetRouteComponentInterface (not compatible with extends RatchetWsServer at time of writing)
     'use_routes'      => false, 
 
     'host'            => '0.0.0.0', // Prepend tls:// to host address to enable SSL/TLS. Example: tls://0.0.0.0

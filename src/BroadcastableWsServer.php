@@ -14,8 +14,18 @@ class BroadcastableWsServer extends WsServer
 		$this->component = $component;
 	}
 
+	public function boot()
+	{
+		$this->component->boot();
+	}
+
 	public function onEntry($entry)
 	{
 		$this->component->onEntry($entry);
+	}
+
+	public function setConsole($console)
+	{
+		$this->component->setConsole($console);
 	}
 }
