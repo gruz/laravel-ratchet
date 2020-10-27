@@ -1,17 +1,17 @@
 {
-    "name": "askedio/laravel-ratchet",
-    "description": "A Ratchet Server built for Laravel",
+    "name": "gruz/laravel-ratchet",
+    "description": "A Laravel 8 compatible fork of Ratchet Server built for Laravel",
     "keywords": ["laravel"],
     "license": "MIT",
     "type": "library",
     "require": {
         "php": ">=7.2.0",
         "ext-zmq": "*",
-        "cboden/ratchet": "^0.4",
-        "graham-campbell/throttle": "^7.4|^8.1.0",
-        "illuminate/console": "^6.0|^7.0|^8.0",
-        "illuminate/support": "^6.0|^7.0|^8.0",
-        "react/zmq": "0.2.*|0.3.*|0.4.*"
+        "cboden/ratchet": "^0.4.3",
+        "graham-campbell/throttle": "^8.1",
+        "react/zmq": "^0.4.0",
+        "illuminate/support": "^8.11",
+        "illuminate/console": "^8.11"
     },
     "autoload": {
         "psr-4": {
