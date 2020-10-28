@@ -10,8 +10,7 @@
         "cboden/ratchet": "^0.4.3",
         "graham-campbell/throttle": "^8.1",
         "react/zmq": "^0.4.0",
-        "illuminate/support": "^8.11",
-        "illuminate/console": "^8.11"
+        "laravel/framework": ">=8"
     },
     "autoload": {
         "psr-4": {

@@ -5,14 +5,14 @@ This package enables you to create and run a fully functioning WebSocket server 
 ## Requirements
 
 - PHP 7.1+
-- Laravel 5.5+
+- Laravel 8+
 - ZeroMQ
 - ext-zmq for PHP
 
 ## Installation
 
 ```bash
-$ composer require askedio/laravel-ratchet
+$ composer require gruz/laravel-ratchet
 ```
 
 The service provider is loaded automatically in Laravel 5.5 using Package Autodiscovery.
